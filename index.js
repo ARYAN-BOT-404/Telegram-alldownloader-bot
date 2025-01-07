@@ -1,7 +1,6 @@
 const { alldown } = require('aryan-media-downloader');
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const fs = require('fs');
 
 const callbackDataStore = {};
 const BOT_TOKEN = 'YOUR_TOKEN_SEND';
