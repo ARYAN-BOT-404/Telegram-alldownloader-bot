@@ -30,14 +30,14 @@ bot.on('message', async (msg) => {
         try {
             // Try to get the high-quality video stream
             const vidResponse = await axios.get(high, { responseType: 'stream' });
-            imon = vidResponse.data; // Store the video stream
+            aryan = vidResponse.data; // Store the video stream
         } catch (error) {
             console.error('Error streaming video:', error);
-            imon = high; // Fallback to the high-quality link in case of error
+            aryan = high; // Fallback to the high-quality link in case of error
         }
 
         // Send the video file to the user
-        await bot.sendVideo(chatId, imon, {
+        await bot.sendVideo(chatId, aryan, {
             caption: `🎬 𝐕𝐈𝐃𝐄𝐎 𝐓𝐈𝐓𝐋𝐄: ${title}`,
             reply_markup: {
                 inline_keyboard: [
