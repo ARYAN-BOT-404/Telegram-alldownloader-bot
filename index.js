@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
 const callbackDataStore = {};
-const BOT_TOKEN = 'YOUR_TOKEN_SEND';
+const BOT_TOKEN = '8156707157:AAGKNB6cyvY7rWYAaWqWFvGa6uk_2s6vHPw';
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 function removeHashtags(text) {
