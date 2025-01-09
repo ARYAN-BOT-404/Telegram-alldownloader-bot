@@ -26,7 +26,7 @@ bot.on('message', async (msg) => {
 
         const { low, high, title } = data.data; // Get the high-quality link and title
 
-        let imon;
+        let aryan;
         try {
             // Try to get the high-quality video stream
             const vidResponse = await axios.get(high, { responseType: 'stream' });
