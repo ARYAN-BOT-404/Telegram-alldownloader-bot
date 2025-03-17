@@ -4,7 +4,7 @@ const { alldown } = require('aryan-videos-downloader');
 const fs = require('fs');
 
 const callbackDataStore = {};
-const BOT_TOKEN = 'BOT_TOKEN';
+const BOT_TOKEN = 'Your_Bot_Token';
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 function removeHashtags(text) {
@@ -19,12 +19,16 @@ bot.onText(/\/start|start@.+/, async (msg) => {
     const chatId = msg.chat.id;
 
     const welcomeMessage = `
+🌟✨ ❝ *Welcome to the ArYAN All-in-One Video Downloader Bot!* ❞ ✨🌟
+──────────────────────────  
 👨‍💻 *Developer*:  
    ❝ *ArYAN AHMED RUDRO* ❞  
 
 📞 *Reach Out*:  
    🔹 [Facebook](https://www.facebook.com/profile.php?id=61572658681308)  
-   🔹 [Telegram](https://t.me/ArYANAHMEDRUDRO)  
+   🔹 [Telegram](https://t.me/ArYANAHMEDRUDRO) 
+
+
     `;
 
     await bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown', disable_web_page_preview: true });
@@ -48,16 +52,16 @@ bot.on('message', async (msg) => {
                 callbackDataStore[sessionId] = { title: escapedTitle, high, low };
 
                 const markdown = `
-🎥 *Title:* ${escapedTitle}
-🔰 Please select a format to download:
+🎬 *Title:* ${escapedTitle}
+📥 Please select a format to download:
                 `;
 
                 const replyMarkup = {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: '🎥 HD Quality Video', callback_data: `${sessionId}|high` }],
+                            [{ text: '📹 HD Quality Video', callback_data: `${sessionId}|high` }],
                             [{ text: '📹 Normal Quality Video', callback_data: `${sessionId}|low` }],
-                            [{ text: '🎶 Extract MP3', callback_data: `${sessionId}|mp3` }],
+                            [{ text: '🎵 Extract MP3', callback_data: `${sessionId}|mp3` }],
                         ],
                     },
                 };
@@ -69,10 +73,10 @@ bot.on('message', async (msg) => {
 
                 setTimeout(() => bot.deleteMessage(chatId, selectMsg.message_id), 10000);
             } else {
-                bot.sendMessage(chatId, '📛 Media not found. Please check the URL and try again.');
+                bot.sendMessage(chatId, '❌ Media not found. Please check the URL and try again.');
             }
         } catch (error) {
-            bot.sendMessage(chatId, '📛 Failed to fetch media. Please try again later.');
+            bot.sendMessage(chatId, '❌ Failed to fetch media. Please try again later.');
         } finally {
             bot.deleteMessage(chatId, loadingMsg.message_id);
         }
