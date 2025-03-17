@@ -23,7 +23,7 @@ bot.onText(/\/start|start@.+/, async (msg) => {
    ❝ *ArYAN AHMED RUDRO* ❞  
 
 📞 *Reach Out*:  
-   🔹 [Facebook](https://www.facebook.com/profile.php?id=100000959749712)  
+   🔹 [Facebook](https://www.facebook.com/profile.php?id=61572658681308)  
    🔹 [Telegram](https://t.me/ArYANAHMEDRUDRO)  
     `;
 
