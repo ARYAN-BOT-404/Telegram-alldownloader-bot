@@ -1,149 +1,172 @@
-const Telegraf = require('node-telegram-bot-api');
-const { alldl } = require('aryan-videos-downloader');
-const axios = require('axios')
-const util = require('util');
-const chalk = require('chalk');
-const figlet = require('figlet');
-const express = require('express'); 
-const app = express();
-const path = require('path')
-const port = process.env.PORT || 8080;
+const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
+const { alldown } = require('aryan-videos-downloader');
+const fs = require('fs');
 
-// express 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'aryan.html'));
-});
+const callbackDataStore = {};
+const BOT_TOKEN = '7722550278:AAE3effE5jwMdZ-vUCLAWXKoqlxx6fUSePM';
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
-function listenOnPort(port) {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
-app.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${port} is already in use. Trying another port...`);
-      listenOnPort(port + 1);
-    } else {
-      console.error(err);
-    }
-  });
+function removeHashtags(text) {
+    return text.replace(/#\S+/g, '').trim();
 }
 
-listenOnPort(port);
+function escapeMarkdown(text) {
+    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+}
 
-// Bot config token 
-let token = '7722550278:AAE3effE5jwMdZ-vUCLAWXKoqlxx6fUSePM'  //replace this part with your bot token
-const bot = new Telegraf(token, { polling: true });
-let Start = new Date();
+bot.onText(/\/start|start@.+/, async (msg) => {
+    const chatId = msg.chat.id;
 
-const logs = (message, color) => {
-  const timestamp = new Date().toLocaleTimeString();
-  console.log(chalk[color](`[${timestamp}] => ${message}`));
-};
+    const welcomeMessage = `
+🌟✨ ❝ *Welcome to the Aryan All-in-One Video Downloader Bot!* ❞ ✨🌟
 
-const Figlet = () => {
-  figlet('tiktokdl', { font: 'Block', horizontalLayout: 'default' }, function (err, data) {
-    if (err) {
-      console.log('Error:', err);
-      return;
-    }
-    console.log(chalk.yellow.bold(data));
-    console.log(chalk.yellow(`ArYAN`));
-  });
-};
+🎥 _Effortlessly download videos from multiple platforms._  
+🔗 _Send me a valid video link, and I’ll do the rest!_
 
-bot.on('polling_error', (error) => {
-  logs(`Polling error: ${error.message}`, 'blue');
+──────────────────────────  
+💻 *Supported Platforms:*  
+   🔹 [🌐 Facebook](https://www.facebook.com)  
+   🔹 [🎵 TikTok](https://www.tiktok.com)  
+   🔹 [🐦 Twitter](https://www.twitter.com)  
+   🔹 [📸 Instagram](https://www.instagram.com)  
+   🔹 [▶️ YouTube](https://www.youtube.com)  
+   🔹 [📌 Pinterest](https://www.pinterest.com)  
+   🔹 [🗂️ Google Drive](https://drive.google.com)  
+   🔹 [✂️ CapCut](https://www.capcut.com)  
+   🔹 [🎭 Likee](https://www.likee.video)  
+   🔹 [🌐 Threads](https://www.threads.net)  
+
+──────────────────────────  
+👨‍💻 *Developer*:  
+   ❝ *ArYAN AHMED RUDRO* ❞  
+
+📞 *Reach Out*:  
+   🔹 [Facebook](https://www.facebook.com/profile.php?id=61572658681308)  
+   🔹 [Telegram](https://t.me/ArYANAHMEDRUDRO)  
+
+🚀 *Fast. Reliable. Easy to use.*  
+💡 *Start downloading now and enjoy the convenience!*
+
+
+    `;
+
+    await bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown', disable_web_page_preview: true });
 });
-
-// set menu
-bot.setMyCommands([
-  {
-    command: '/start',
-    description: 'Start a new conversation'
-  }
- ]);
-
-// command
-bot.onText(/^\/start$/, (msg) => {
-const From = msg.chat.id;
-const caption = `
-Eusy Tiktok downloader`
-bot.sendMessage(From, caption);
-});
-
 
 
 
 bot.on('message', async (msg) => {
-  Figlet();
-  logs('Success activated', 'green');
-  
-  const From = msg.chat.id;
-  const text = msg.text;
+    const chatId = msg.chat.id;
+    const text = msg.text;
 
-  
-  const body = /^https/;
-  if (body.test(text)) {
-    const url = text;
-    try {
-      
-      const data = await alldl(url);
-      console.log(data);
+    if (text.startsWith('https://')) {
+        const loadingMsg = await bot.sendMessage(chatId, '⏳ Fetching and processing media...');
+        try {
+            const response = await alldown(text);
+            if (response.status) {
+                const { title, high, low } = response.data;
+               const tit = removeHashtags(title);
+                const escapedTitle = escapeMarkdown(tit);
+                const sessionId = `session_${Date.now()}`;
+                callbackDataStore[sessionId] = { title: escapedTitle, high, low };
 
+                const markdown = `
+🎬 *Title:* ${escapedTitle}
+📥 Please select a format to download:
+                `;
 
-      const lowQuality = data.data.low;
-      const highQuality = data.data.high;
-      const title = data.data.title;
+                const replyMarkup = {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: '📹 HD Quality Video', callback_data: `${sessionId}|high` }],
+                            [{ text: '📹 Normal Quality Video', callback_data: `${sessionId}|low` }],
+                            [{ text: '🎵 Extract MP3', callback_data: `${sessionId}|mp3` }],
+                        ],
+                    },
+                };
 
-      
-      const replyMarkup = {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: 'Low Quality', callback_data: 'low' }],
-            [{ text: 'High Quality', callback_data: 'high' }]
-          ]
+                const selectMsg = await bot.sendMessage(chatId, markdown, {
+                    parse_mode: 'Markdown',
+                    ...replyMarkup,
+                });
+
+                setTimeout(() => bot.deleteMessage(chatId, selectMsg.message_id), 10000);
+            } else {
+                bot.sendMessage(chatId, '❌ Media not found. Please check the URL and try again.');
+            }
+        } catch (error) {
+            bot.sendMessage(chatId, '❌ Failed to fetch media. Please try again later.');
+        } finally {
+            bot.deleteMessage(chatId, loadingMsg.message_id);
         }
-      };
+    }
+});
 
-      
-      await bot.sendMessage(From, `Please choose the video quality:`, replyMarkup);
+bot.on('callback_query', async (callbackQuery) => {
+    const chatId = callbackQuery.message.chat.id;
+    const [sessionId, type] = callbackQuery.data.split('|');
+    const session = callbackDataStore[sessionId];
 
-      // Handle the callback when the user chooses the quality
-      bot.once('callback_query', async (callbackQuery) => {
-        // Only handle the callback if it's from the same user
-        if (callbackQuery.message.chat.id !== From) {
-          return;
-        }
+    if (!session) {
+        return;
+    }
 
-        const quality = callbackQuery.data;
-        
-        // Select the correct video URL based on user choice
-        let videoUrl = quality === 'high' ? highQuality : lowQuality;
+    const { title, high, low } = session;
+
+    if (type === 'high' || type === 'low') {
+        const quality = type === 'high' ? 'HD' : 'Normal';
+        const url = type === 'high' ? high : low;
+        const loadingMsg = await bot.sendMessage(chatId, `⏳ Sending ${quality} Quality Video...`);
+
+        let aryan;
+
+          try {
+              const vidResponse = await axios.get(url, { responseType: 'stream' });
+              aryan = vidResponse?.data || url;
+                } catch (error) {
+                  aryan = url;
+          }
+        await bot.sendVideo(chatId, aryan, {
+            caption: `🎬 *Title:* ${title}\n📹 *Quality:* ${quality}`,
+            parse_mode: 'Markdown',
+        });
+
+        bot.deleteMessage(chatId, loadingMsg.message_id);
+    } else if (type === 'mp3') {
+        const loadingMsg = await bot.sendMessage(chatId, '🎵 Extracting MP3, please wait...');
+        const audioPath = `Aryan_${Date.now()}.mp3`;
 
         try {
-          
-          const videoBuffer = (await axios.get(videoUrl, { responseType: 'arraybuffer' })).data;
-          
-          // Send the selected video
-          await bot.sendVideo(From, videoBuffer, { caption: title });
-          await bot.sendMessage(From, 'POWERED BY ArYAN AHMED RUFRO');
-          
-          
-          await bot.answerCallbackQuery(callbackQuery.id);
-        } catch (error) {
-          
-          await bot.sendMessage(From, 'Sorry, there was an error downloading the video.');
-          logs(`[ ERROR ] ${From}: ${error.message}`, 'red');
+            const audioStream = await axios({
+                url: high,
+                method: 'GET',
+                responseType: 'stream',
+            });
+
+            const writer = fs.createWriteStream(audioPath);
+            audioStream.data.pipe(writer);
+
+            writer.on('finish', async () => {
+                await bot.sendAudio(chatId, audioPath, {
+                    caption: `🎵 *Extracted Audio from:* ${title}`,
+                    parse_mode: 'Markdown',
+                });
+                fs.unlinkSync(audioPath);
+                bot.deleteMessage(chatId, loadingMsg.message_id);
+            });
+
+            writer.on('error', async () => {
+                await bot.sendMessage(chatId, '❌ Failed to process the audio.');
+                bot.deleteMessage(chatId, loadingMsg.message_id);
+            });
+        } catch {
+            bot.sendMessage(chatId, '❌ Failed to extract MP3. Please try again later.');
+            bot.deleteMessage(chatId, loadingMsg.message_id);
         }
-      });
-
-    } catch (error) {
-        bot.sendMessage(From, 'Sorry, an error occurred while downloading the video.');
-        console.log(`[ ERROR ] ${From}: ${error.message}`, 'red');
     }
-}
-})
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+    delete callbackDataStore[sessionId];
+});
+
+console.log("ArYAN Telegram Bot Running")
