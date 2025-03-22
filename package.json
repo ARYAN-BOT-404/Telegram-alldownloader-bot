@@ -1,18 +1,26 @@
 {
-  "name": "nodejs",
+  "name": "Video-downloader-bot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ARYAN-BOT-404/Telegram-alldownloader-bot"
+  },
   "keywords": [],
-  "author": "ArYAN",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.0.6",
-    "axios": "^1.7.9",
+    "axios": "^1.7.7",
+    "express": "^4.21.1",
+    "chalk": "^4.1.1",
+    "figlet": "^1.8.0",
     "aryan-videos-downloader": "^0.0.1",
-    "node-telegram-bot-api": "^0.66.0"
+    "node-telegram-bot-api": "^0.66.0",
+    "path": "^0.12.7"
   }
 }
